@@ -1,121 +1,148 @@
 # DocDiff AI
 
-**Compare business documents. Find discrepancies. Inspect the evidence.**
+**Compare two versions of a document. See what changed. Verify the evidence.**
 
-DocDiff AI is an open-source tool for comparing proposals and structured business documents.
-Instead of an unexplained verdict, it links every extracted value to the original text used
-in the comparison.
+DocDiff AI is an open-source document review workspace for business users and
+developers. Upload two document versions, review added, removed, modified and
+unchanged passages, and inspect the original text for each finding.
 
-**Status:** early alpha (v0.1). This release focuses on a narrow, reproducible workflow:
-comparing labeled totals, deadlines, warranties and payment terms. It is not a general
-contract analysis or legal decision system.
+**No account or LLM API key is needed to try the example locally.**
 
-> **Em português:** compare propostas comerciais, encontre informações divergentes e
-> confira os trechos que justificam cada resultado.
+> Em português: compare versões de um contrato ou proposta e veja as mudanças
+> lado a lado. Os trechos são apresentados com referências ao texto de origem.
 
-## What works today
+**Project status: early alpha (v0.1).** This is a working local preview, not a
+hosted service or automated legal review system.
 
-- Compare 2–10 TXT or Markdown documents locally without an API key.
-- Extract labeled totals, delivery deadlines, warranties and payment terms.
-- Detect differences, missing fields and contradictions inside a document.
-- Export evidence-linked reports as Markdown or JSON.
-- Convert PDF with selectable text and DOCX/PPTX through lightweight, optional Docling adapters.
-- Optionally extract candidate values with an LLM and verify literal source evidence before comparing.
-- Optionally generate an LLM summary using an OpenAI-compatible API.
-- Optionally use a Streamlit interface with document upload.
+## Try the review workspace
 
-## Quick start
-
-Python 3.11+ is required.
-
-~~~bash
-python -m pip install -e .
-docdiff examples/proposal_a.md examples/proposal_b.md
-docdiff examples/proposal_a.md examples/proposal_b.md --format json
-~~~
-
-For PDF and Office files:
-
-~~~bash
-python -m pip install -e ".[documents]"
-~~~
-
-For the visual interface:
+Requirements: Python 3.11+ and a clone of this repository.
 
 ~~~bash
 python -m pip install -e ".[ui]"
 streamlit run app/streamlit_app.py
 ~~~
 
-### Optional LLM extraction and summary
+The interface opens with a complete comparison of **two synthetic agreements**.
+You can run the example again with one click, upload your own two versions, filter
+changes and export a Markdown/JSON review report. The local demo makes no LLM
+requests and does not require paid credentials.
 
-Core comparison runs offline. To request a narrative summary, explicitly configure
-an OpenAI-compatible provider:
-
-~~~powershell
-$env:DOCDIFF_API_KEY="your-key"
-$env:DOCDIFF_MODEL="your-model"
-$env:DOCDIFF_BASE_URL="https://api.openai.com/v1"
-docdiff examples/proposal_a.md examples/proposal_b.md --extraction llm --format json
-# Or keep offline extraction and summarize its findings:
-docdiff examples/proposal_a.md examples/proposal_b.md --ai-summary
-~~~
-
-**Privacy:** `--extraction llm` sends the **complete extracted document text**
-to the configured provider, capped at 40,000 characters per document; this is
-strictly opt-in. The separate `--ai-summary` sends only the structured findings
-and excerpts. Offline rules send nothing. All AI outputs require human review.
-See [LLM extraction, source verification and evaluation](docs/LLM_EXTRACTION.md).
-
-## Expected sample result
-
-| Field | Status |
-|---|---|
-| Total amount | Different |
-| Delivery deadline | Different |
-| Warranty | Match |
-| Payment terms | Different |
-
-Each field contains the exact values and source excerpts.
-
-## Architecture
-
-1. Read files locally (or convert through optional Docling).
-2. Extract values from supported labeled lines by default, or use an opt-in LLM whose candidate values must pass literal evidence checks.
-3. Normalize values and compare across documents.
-4. Present differences with inspectable excerpts and converted-text line numbers.
-5. Optionally summarize those evidence-backed results with an LLM.
-
-See [document formats and integration tests](docs/DOCUMENTS.md),
-[architecture](docs/ARCHITECTURE.md), [LLM extraction and evaluation](docs/LLM_EXTRACTION.md),
-[roadmap](.plans/active/v0.1.md),
-and [contributing](CONTRIBUTING.md).
-
-## Current limitations
-
-- The deterministic engine supports four labeled fields only.
-- The opt-in LLM extraction may recover some prose/table fields but is constrained to the four supported types; it has not been externally benchmarked.
-- A verified quote establishes literal presence, **not** that its semantic meaning is correct or contractually binding.
-- Arbitrary clauses and complex tables are not generally understood yet.
-- PDF files use Docling's native, model-free text extraction: scanned/image-only PDFs require OCR, which is not included yet.
-- For converted PDF/Office files, line references point to converted Markdown text, **not physical PDF pages**.
-- This is not a hosted production service or a replacement for human document review.
-- AI summaries are not automatically fact-checked.
-- OCR and conversion quality depend on the optional Docling setup.
-
-## Development
+A restricted **public sample-only entry point** is included:
 
 ~~~bash
-python -m pip install -e '.[dev]'
+streamlit run app/demo_app.py
+~~~
+
+It disables uploads and LLM actions. See
+[public deployment instructions](docs/DEPLOYMENT.md). No hosted URL has been
+published or verified yet.
+
+For PDF/DOCX/PPTX input, install the optional lightweight conversion integration:
+
+~~~bash
+python -m pip install -e ".[documents,ui]"
+~~~
+
+PDF uses model-free text extraction; scanned/image-only PDFs need OCR, which
+is **not** supported by this path.
+
+## Example: before and after
+
+| Finding | Version A | Version B |
+|---|---|---|
+| Payment window | 30 days | 45 days |
+| Termination notice | 60 days | 90 days |
+| Confidentiality section | Present | Removed |
+| Personal-data access | Absent | Added |
+
+Each change links to the exact passage and extracted-text line references,
+not just a generated interpretation. These are **synthetic example values**.
+
+## CLI and library
+
+Version review is deterministic and works without network calls:
+
+~~~bash
+python -m pip install -e .
+docdiff examples/agreement_before.md examples/agreement_after.md --review-versions
+docdiff examples/agreement_before.md examples/agreement_after.md --review-versions --format json
+~~~
+
+The original multi-document **field comparison** remains available:
+
+~~~bash
+docdiff examples/proposal_a.md examples/proposal_b.md
+~~~
+
+It extracts and compares four labeled fields: total amount, delivery deadline,
+warranty period and payment period. For advanced use, there is a separate
+**opt-in LLM field extractor**, with literal-source verification and an evaluation
+dataset. See [LLM extraction and privacy](docs/LLM_EXTRACTION.md).
+
+### Why not just use Docling?
+
+[Docling](https://github.com/docling-project/docling) parses and converts source
+documents into structured content. DocDiff AI uses Docling as an **optional
+input adapter**, then handles *version comparison, evidence preservation,
+review workflow and report exports*. It is an independent application, not
+a fork of Docling or a replacement for its conversion pipeline.
+
+## Architecture in brief
+
+~~~text
+TXT / MD / PDF / DOCX / PPTX
+            |
+   Local text / Docling conversion
+            |
+            +-- version_diff.py: paragraph segmentation and lexical alignment
+            |       |
+            |       +-- before/after review + evidence + exports
+            |
+            +-- core.py: normalized field comparison
+                    |
+                    +-- rules (offline) or verified_extraction.py (opt-in LLM)
+~~~
+
+Core behavior is unit tested without remote providers. Heavy Docling conversion
+is tested separately. The repository includes `AGENTS.md`, task-specific skills,
+skill routing, contribution guidelines and lint/test checks on pull requests.
+
+See [version review behavior](docs/VERSION_REVIEW.md),
+[architecture](docs/ARCHITECTURE.md),
+[document formats](docs/DOCUMENTS.md) and
+[how to contribute](CONTRIBUTING.md) and
+[existing open-source alternatives](docs/ALTERNATIVES.md).
+
+## What the tool does **not** do
+
+- **Text similarity is not semantic equivalence.** The version review uses
+  text, headings and conservative lexical matching; it can miss paraphrases,
+  reorders of substantially changed clauses and cross-references.
+- Numeric differences are flagged for review, **not classified as legal risk**.
+- Exact quotes are evidence of textual occurrence, not proof of contractual meaning.
+- Converted Markdown line numbers are **not physical PDF page citations**.
+- Hosted deployment, OCR, security hardening for untrusted multi-tenant uploads,
+  AI-powered clause-risk classification and semantic contradiction analysis are
+  not implemented yet.
+- LLM extraction is opt-in and sends document text to the configured provider.
+  Model accuracy has **not** been established on real-world documents.
+
+## Quality and development
+
+~~~bash
+python -m pip install -e ".[dev]"
 python -m ruff check .
 python -m ruff format --check .
 python -m unittest discover -s tests -v
 python .github/scripts/check_skills.py
 python scripts/evaluate_extraction.py --mode rules
+# Optional Streamlit UI smoke check (requires .[ui]):
+python scripts/smoke_ui.py
 ~~~
 
-Instructions for coding agents live in [AGENTS.md](AGENTS.md). Canonical skills and
-task routes live in [.agents/skills](.agents/skills). This structure draws inspiration
-from Docling's contributor workflow; DocDiff AI is an independent project.
+Optional real PDF/Office integration tests are documented in
+[docs/DOCUMENTS.md](docs/DOCUMENTS.md).
 
-MIT licensed. Contributions and issues are welcome.
+**License:** MIT. Reports with reproducible examples and focused contributions
+are welcome. No confidential documents are checked into this repository.

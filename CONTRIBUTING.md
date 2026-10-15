@@ -7,6 +7,8 @@ focused pull requests are welcome.
 
 1. Open an issue for changes to public behavior or new field support.
 2. Keep changes scoped. Include a regression test whenever behavior changes.
+   For version-review changes, cover both sides' source text and line evidence,
+   duplicate/reordered clauses, and explicit uncertainty about lexical matching.
 3. Run: python -m ruff check . and python -m ruff format --check .
 4. Run: python -m unittest discover -s tests -v
 5. Run: python .github/scripts/check_skills.py
