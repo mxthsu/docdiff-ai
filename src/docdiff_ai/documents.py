@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
@@ -61,7 +62,9 @@ def _docling_extract(path: Path) -> str:
     except Exception as exc:
         # Conversion is an optional external dependency boundary.
         raise DocumentReadError(f"Falha ao converter {path.name}: {type(exc).__name__}") from exc
-    if not text.strip():
+    # Native PDF output can contain only image placeholders, even without text.
+    readable_text = re.sub(r"<!--.*?-->", "", text, flags=re.DOTALL)
+    if not re.search(r"\w", readable_text):
         raise DocumentReadError(
             f"Documento sem texto extraível: {path.name}. "
             "PDFs digitalizados precisam de OCR, ainda não disponível nesta configuração."

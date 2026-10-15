@@ -13,9 +13,11 @@ from docdiff_ai.documents import DocumentReadError, from_bytes, from_path
 
 try:
     from docx import Document as WordDocument
+    from PIL import Image, ImageDraw
     from pptx import Presentation
     from pptx.util import Inches
     from reportlab.lib.pagesizes import letter
+    from reportlab.lib.utils import ImageReader
     from reportlab.pdfgen import canvas
 except ImportError:
     WordDocument = None
@@ -105,6 +107,16 @@ class DoclingConversionIntegrationTests(unittest.TestCase):
         self.assertEqual(document.name, "unsafe.docx")
         self.assertEqual(document.reference_type, "converted_markdown_line")
         self.assertIn("Total price", document.text)
+
+    def test_image_only_pdf_cannot_be_treated_as_text(self):
+        path = self.root / "scanned.pdf"
+        image = Image.new("RGB", (900, 180), color="white")
+        ImageDraw.Draw(image).text((20, 60), "Total price: USD 1250.00", fill="black")
+        page = canvas.Canvas(str(path))
+        page.drawImage(ImageReader(image), 50, 500, width=450, height=90)
+        page.save()
+        with self.assertRaises(DocumentReadError):
+            from_path(path)
 
     def test_corrupted_pdf_is_rejected(self):
         path = self.root / "corrupted.pdf"

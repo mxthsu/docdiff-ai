@@ -55,7 +55,7 @@ python -m unittest discover -s tests/integration -v
 Fixtures are generated at test time with ReportLab, python-docx and python-pptx.
 They contain synthetic proposal values only; no copyrighted or private
 documents are committed. Coverage includes PDF, DOCX, PPTX, byte uploads,
-corruption, empty DOCX, cross-format comparison and evidence provenance.
+corruption, image-only/scanned PDFs, empty DOCX, cross-format comparison and evidence provenance.
 
 In GitHub Actions, these tests run **only on manual dispatch** with
 `run_docling_integration=true`. Pull request CI runs the fast suite, Ruff
