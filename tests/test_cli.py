@@ -6,7 +6,6 @@ from pathlib import Path
 
 from docdiff_ai.cli import main
 
-
 ROOT = Path(__file__).resolve().parents[1]
 EXAMPLES = [str(ROOT / "examples" / "proposal_a.md"), str(ROOT / "examples" / "proposal_b.md")]
 

@@ -21,7 +21,9 @@ def check_routes() -> list[str]:
         return ["Routes must be a nonempty object."]
     discovered = {entry.name for entry in SKILLS.iterdir() if entry.is_dir()}
     if discovered != set(routes):
-        errors.append(f"Routing mismatch: missing={discovered - set(routes)}; stale={set(routes) - discovered}")
+        errors.append(
+            f"Routing mismatch: missing={discovered - set(routes)}; stale={set(routes) - discovered}"
+        )
     for name, description in routes.items():
         if not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", name):
             errors.append(f"Invalid skill name: {name}")

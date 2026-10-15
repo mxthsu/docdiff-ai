@@ -39,6 +39,8 @@ For reviews and re-reviews load code-review first.
 
 ## Validation before completion
 
+Run: python -m ruff check .
+Run: python -m ruff format --check .
 Run: python -m unittest discover -s tests -v
 Run: python .github/scripts/check_skills.py
 

@@ -37,7 +37,9 @@ if "report" in st.session_state:
     report = st.session_state["report"]
     st.subheader("Resultados")
     for result in report.fields:
-        with st.expander(f"{result.label} — {STATUS_LABELS[result.status]}", expanded=result.status != "match"):
+        with st.expander(
+            f"{result.label} — {STATUS_LABELS[result.status]}", expanded=result.status != "match"
+        ):
             for name, evidence in result.evidence.items():
                 st.markdown(f"**{name}**")
                 if not evidence:

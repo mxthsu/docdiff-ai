@@ -96,7 +96,9 @@ and [contributing](CONTRIBUTING.md).
 ## Development
 
 ~~~bash
-python -m pip install -e .
+python -m pip install -e '.[dev]'
+python -m ruff check .
+python -m ruff format --check .
 python -m unittest discover -s tests -v
 python .github/scripts/check_skills.py
 ~~~
