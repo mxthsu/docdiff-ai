@@ -50,6 +50,16 @@ class VerifiedExtractionTests(unittest.TestCase):
         self.assertEqual(result.evidence["total_price"], [])
         self.assertEqual(result.rejected[0].reason, "quote_not_unique_in_source")
 
+    def test_invalid_money_separators_are_rejected(self):
+        doc = SourceDocument("money.md", "Total price: USD 12..50")
+        result = verify_response(
+            doc,
+            FIELDS,
+            response({"field": "total_price", "raw": "USD 12..50", "quote": "Total price: USD 12..50"}),
+        )
+        self.assertEqual(result.evidence["total_price"], [])
+        self.assertEqual(result.rejected[0].reason, "invalid_currency_amount")
+
     def test_incomplete_quote_cannot_support_field(self):
         data = response({"field": "delivery_days", "raw": "30", "quote": "30 days"})
         result = verify_response(self.document, FIELDS, data)

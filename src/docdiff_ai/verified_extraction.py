@@ -47,7 +47,7 @@ FIELD_CONTEXT = {
         re.compile(r"(?i)\b(dias|days|net)\b"),
     ),
 }
-PRICE = re.compile(r"(?i)^(R\$|US\$|USD|BRL|EUR|€|\$)\s*\d[\d.,]*$")
+PRICE = re.compile(r"(?i)^(R\$|US\$|USD|BRL|EUR|€|\$)\s*\d+(?:[.,]\d+)*$")
 DAYS_OR_MONTHS = re.compile(r"^\d+$")
 Completion = Callable[[dict[str, object]], str]
 
