@@ -22,6 +22,8 @@ with st.expander("Como funciona"):
     st.write(
         "O motor inicial reconhece valores totais, prazos de entrega, garantia e "
         "prazos de pagamento em linhas rotuladas. PDF e Office exigem Docling. "
+        "PDF com texto selecionável utiliza conversão nativa (sem OCR). "
+        "Números de linha dos arquivos convertidos referem-se ao Markdown extraído, não à página física. "
         "A síntese por IA é opcional e não substitui a evidência original."
     )
 
@@ -45,7 +47,12 @@ if "report" in st.session_state:
                 if not evidence:
                     st.caption("Informação não identificada.")
                 for hit in evidence:
-                    st.write(f"Linha {hit.line} · {hit.raw}")
+                    local = (
+                        "Linha do Markdown convertido"
+                        if hit.reference_type == "converted_markdown_line"
+                        else "Linha do arquivo texto"
+                    )
+                    st.write(f"{local} {hit.line} · {hit.raw}")
                     st.code(hit.excerpt, language=None)
     st.download_button(
         "Baixar relatório Markdown",

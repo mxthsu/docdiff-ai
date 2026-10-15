@@ -41,6 +41,7 @@ PATTERNS = {
 class SourceDocument:
     name: str
     text: str
+    reference_type: str = "text_line"
 
 
 @dataclass(frozen=True)
@@ -50,6 +51,7 @@ class Evidence:
     excerpt: str
     raw: str
     normalized: str
+    reference_type: str = "text_line"
 
 
 @dataclass(frozen=True)
@@ -117,7 +119,14 @@ def extract_evidence(document: SourceDocument, fields: tuple[str, ...] = FIELDS)
             if matched is not None:
                 raw = matched.group("value").strip()
                 matches[field].append(
-                    Evidence(document.name, line_number, line.strip(), raw, _normalize(field, raw))
+                    Evidence(
+                        document.name,
+                        line_number,
+                        line.strip(),
+                        raw,
+                        _normalize(field, raw),
+                        document.reference_type,
+                    )
                 )
     return matches
 
@@ -170,7 +179,9 @@ def report_to_markdown(report: ComparisonReport) -> str:
             else:
                 for hit in hits:
                     lines.append(
-                        f"- **{name}**, linha {hit.line}: {hit.raw} "
+                        f"- **{name}**, "
+                        f"{'linha do Markdown convertido' if hit.reference_type == 'converted_markdown_line' else 'linha'} "
+                        f"{hit.line}: {hit.raw} "
                         f"(normalizado: {hit.normalized}) — \u201c{hit.excerpt}\u201d"
                     )
         lines.append("")
