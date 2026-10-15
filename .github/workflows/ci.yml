@@ -9,6 +9,11 @@ on:
         type: boolean
         required: false
         default: false
+      run_ui_smoke:
+        description: Run Streamlit UI smoke test (installs UI dependencies)
+        type: boolean
+        required: false
+        default: false
 
 permissions:
   contents: read
@@ -38,3 +43,9 @@ jobs:
       - name: Test actual PDF/DOCX/PPTX conversion
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_docling_integration }}
         run: python -m unittest discover -s tests/integration -v
+      - name: Install optional Streamlit dependencies
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_ui_smoke }}
+        run: python -m pip install -e '.[ui]'
+      - name: Test Streamlit workspace without browser or provider
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_ui_smoke }}
+        run: python scripts/smoke_ui.py

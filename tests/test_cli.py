@@ -42,6 +42,36 @@ class CLITests(unittest.TestCase):
         self.assertEqual(payload["fields"][0]["status"], "missing")
         self.assertEqual(payload["extraction"]["rejected_candidate_count"], 0)
 
+    def test_review_versions_cli_reports_changes_in_json(self):
+        files = [
+            str(ROOT / "examples" / "agreement_before.md"),
+            str(ROOT / "examples" / "agreement_after.md"),
+        ]
+        output = io.StringIO()
+        with contextlib.redirect_stdout(output):
+            code = main(files + ["--review-versions", "--format", "json"])
+        self.assertEqual(code, 0)
+        report = json.loads(output.getvalue())
+        self.assertEqual(report["counts"]["modified"], 2)
+        self.assertEqual(report["counts"]["added"], 1)
+        self.assertEqual(report["counts"]["removed"], 1)
+        self.assertIn("offline_lexical_alignment", report["method"])
+
+    def test_review_rejects_ambiguous_options_and_wrong_party_size(self):
+        files = [
+            str(ROOT / "examples" / "agreement_before.md"),
+            str(ROOT / "examples" / "agreement_after.md"),
+        ]
+        for args in (
+            files[:1] + ["--review-versions"],
+            files + ["--review-versions", "--ai-summary"],
+            files + ["--review-versions", "--extraction", "llm"],
+        ):
+            error = io.StringIO()
+            with self.subTest(args=args), contextlib.redirect_stderr(error):
+                self.assertEqual(main(args), 2)
+            self.assertIn("Erro", error.getvalue())
+
     def test_missing_file_fails(self):
         stderr = io.StringIO()
         with contextlib.redirect_stderr(stderr):

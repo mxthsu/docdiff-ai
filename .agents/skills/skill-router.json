@@ -1,6 +1,7 @@
 {
   "python-engineering": "Create, refactor or review Python code, CLI and public API behavior.",
   "document-review": "Modify document ingestion, field extraction, normalization or source evidence.",
+  "version-review": "Build passage diff, align document versions, classify textual changes or update side-by-side review UI.",
   "code-review": "Review or re-review pull requests with reproducible behavior and tests.",
   "llm-evaluation": "Modify LLM providers, prompts, model calls, safety or evaluation suites."
 }
