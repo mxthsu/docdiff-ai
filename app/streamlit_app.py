@@ -23,6 +23,12 @@ STATUS = {
     "removed": "Removido",
     "unchanged": "Preservado",
 }
+MATCH_LABELS = {
+    "identical_text": "texto idêntico",
+    "same_heading": "mesmo título",
+    "lexical_similarity": "similaridade textual",
+    "unmatched": "sem correspondência",
+}
 MARKERS = {
     "modified": "🟠",
     "added": "🟢",
@@ -30,7 +36,7 @@ MARKERS = {
     "unchanged": "⚪",
 }
 
-st.set_page_config(page_title="DocDiff AI | Document review", page_icon="📑", layout="wide")
+st.set_page_config(page_title="Revisa Documentos | Revisão de documentos", page_icon="📑", layout="wide")
 st.markdown(
     """
     <style>
@@ -44,7 +50,7 @@ st.markdown(
           line-height: 1.08; margin-bottom: 0.75rem;}
       .docdiff-subtitle {font-size: 1.05rem; opacity: .78; margin-bottom: 1.3rem;}
     </style>
-    <div class="docdiff-kicker">DOCDIFF AI · OPEN SOURCE</div>
+    <div class="docdiff-kicker">REVISA DOCUMENTOS · CÓDIGO ABERTO</div>
     <div class="docdiff-heading">Documentos diferentes.<br>Decisões com evidências.</div>
     <div class="docdiff-subtitle">Revise alterações entre versões e encontre divergências
       com o texto original sempre à vista.</div>
@@ -61,11 +67,53 @@ mode = st.radio(
 )
 
 
+# Exemplos mostrados no site. Mantemos os arquivos técnicos do repositório
+# inalterados para não afetar a CLI ou as suítes de testes existentes.
+DEMO_ANTES = """# Contrato de prestação de serviços
+
+## 1. Objeto
+A contratada realizará serviços de suporte e manutenção de equipamentos.
+
+## 2. Pagamento
+O pagamento será realizado em até 30 dias após o recebimento da fatura.
+
+## 3. Rescisão
+Qualquer parte poderá encerrar o contrato com aviso prévio de 60 dias.
+
+## 4. Confidencialidade
+As partes preservarão o sigilo das informações comerciais recebidas.
+
+## 5. Foro
+As partes elegem a comarca indicada no instrumento principal.
+
+*Exemplo fictício para demonstração. Não constitui orientação jurídica.*
+"""
+
+DEMO_DEPOIS = """# Contrato de prestação de serviços
+
+## 1. Objeto
+A contratada realizará serviços de suporte e manutenção de equipamentos.
+
+## 2. Pagamento
+O pagamento será realizado em até 45 dias após o recebimento da fatura.
+
+## 3. Rescisão
+Qualquer parte poderá encerrar o contrato com aviso prévio de 90 dias.
+
+## 4. Proteção de dados
+Cada parte deverá restringir o acesso aos dados pessoais aos colaboradores autorizados.
+
+## 5. Foro
+As partes elegem a comarca indicada no instrumento principal.
+
+*Exemplo fictício para demonstração. Não constitui orientação jurídica.*
+"""
+
+
 def demo_documents() -> tuple[SourceDocument, SourceDocument]:
-    paths = (EXAMPLES / "agreement_before.md", EXAMPLES / "agreement_after.md")
     return (
-        SourceDocument(paths[0].name, paths[0].read_text(encoding="utf-8")),
-        SourceDocument(paths[1].name, paths[1].read_text(encoding="utf-8")),
+        SourceDocument("acordo_anterior.md", DEMO_ANTES.strip()),
+        SourceDocument("acordo_revisado.md", DEMO_DEPOIS.strip()),
     )
 
 
@@ -129,7 +177,10 @@ def render_review(report: ReviewReport) -> None:
             if change.numbers_changed:
                 st.warning("O trecho contém números diferentes. Confira valores, unidades e contexto.")
             if change.status == "modified":
-                st.caption(f"Alinhamento: {change.matched_by}. Sem garantia de equivalência semântica.")
+                st.caption(
+                    f"Associação dos trechos: {MATCH_LABELS.get(change.matched_by, 'não identificada')}. "
+                    "Sem garantia de equivalência semântica."
+                )
 
     st.divider()
     st.subheader("Exportar relatório")
@@ -294,7 +345,7 @@ else:
 with st.sidebar:
     st.markdown("### Sobre a ferramenta")
     st.write(
-        "DocDiff AI é um comparador open source para revisão de documentos. "
+        "Revisa Documentos é uma ferramenta de código aberto para revisão de documentos. "
         "Utiliza Docling opcionalmente para PDF e Office."
     )
     st.markdown("**Verificação ≠ interpretação**")
