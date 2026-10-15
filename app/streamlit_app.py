@@ -7,6 +7,7 @@ import streamlit as st
 from docdiff_ai.ai import AIReviewError, summarize_with_llm
 from docdiff_ai.core import STATUS_LABELS, compare, report_to_markdown
 from docdiff_ai.documents import DocumentReadError, from_bytes
+from docdiff_ai.verified_extraction import ExtractionError, VerifiedLLMExtractor
 
 st.set_page_config(page_title="DocDiff AI", page_icon="📄", layout="wide")
 st.title("DocDiff AI")
@@ -27,17 +28,36 @@ with st.expander("Como funciona"):
         "A síntese por IA é opcional e não substitui a evidência original."
     )
 
+extraction_mode = st.radio(
+    "Extração",
+    ["Regras locais (offline)", "LLM com validação textual"],
+    horizontal=True,
+)
+if extraction_mode.startswith("LLM"):
+    st.warning(
+        "Ao comparar, o texto completo dos documentos será enviado ao provedor configurado "
+        "em DOCDIFF_BASE_URL. Revise as permissões dos documentos antes de prosseguir."
+    )
+
 if st.button("Comparar documentos", type="primary", disabled=not (2 <= len(uploaded) <= 10)):
     try:
         documents = [from_bytes(file.name, file.getvalue()) for file in uploaded]
-        report = compare(documents)
+        extractor = VerifiedLLMExtractor() if extraction_mode.startswith("LLM") else None
+        report = compare(documents, extractor=extractor) if extractor else compare(documents)
         st.session_state["report"] = report
-    except (DocumentReadError, ValueError) as exc:
+        st.session_state["llm_rejected"] = len(extractor.rejected) if extractor else None
+    except (DocumentReadError, ValueError, ExtractionError) as exc:
         st.error(str(exc))
 
 if "report" in st.session_state:
     report = st.session_state["report"]
     st.subheader("Resultados")
+    if st.session_state.get("llm_rejected") is not None:
+        st.caption(
+            f"LLM com validação de trechos: {st.session_state['llm_rejected']} candidatos "
+            "descartados por não cumprirem as verificações. "
+            "Trecho exato não equivale a interpretação semântica correta."
+        )
     for result in report.fields:
         with st.expander(
             f"{result.label} — {STATUS_LABELS[result.status]}", expanded=result.status != "match"

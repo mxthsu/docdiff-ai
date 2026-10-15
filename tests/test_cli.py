@@ -3,6 +3,7 @@ import io
 import json
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from docdiff_ai.cli import main
 
@@ -25,6 +26,21 @@ class CLITests(unittest.TestCase):
             exit_code = main(EXAMPLES + ["--format", "json"])
         self.assertEqual(exit_code, 0)
         self.assertEqual(json.loads(stdout.getvalue())["fields"][0]["status"], "different")
+
+    def test_llm_extraction_mode_with_stub_never_calls_network(self):
+        from docdiff_ai.verified_extraction import VerifiedLLMExtractor
+
+        def make_stub():
+            return VerifiedLLMExtractor(lambda _payload: json.dumps({"candidates": []}))
+
+        stdout = io.StringIO()
+        with patch("docdiff_ai.cli.VerifiedLLMExtractor", make_stub), contextlib.redirect_stdout(stdout):
+            code = main(EXAMPLES + ["--extraction", "llm", "--format", "json"])
+        self.assertEqual(code, 0)
+        payload = json.loads(stdout.getvalue())
+        self.assertEqual(payload["extraction"]["mode"], "llm")
+        self.assertEqual(payload["fields"][0]["status"], "missing")
+        self.assertEqual(payload["extraction"]["rejected_candidate_count"], 0)
 
     def test_missing_file_fails(self):
         stderr = io.StringIO()
