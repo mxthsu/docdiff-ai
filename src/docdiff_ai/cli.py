@@ -20,7 +20,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--format", choices=["markdown", "json"], default="markdown")
     parser.add_argument("--fields", nargs="+", choices=FIELDS, default=list(FIELDS))
     parser.add_argument("--output", type=Path, help="Salve o relatório no caminho indicado.")
-    parser.add_argument("--ai-summary", action="store_true", help="Envia evidências a um LLM externo (opt-in).")
+    parser.add_argument(
+        "--ai-summary", action="store_true", help="Envia evidências a um LLM externo (opt-in)."
+    )
     return parser
 
 

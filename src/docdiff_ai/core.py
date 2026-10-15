@@ -75,8 +75,10 @@ def _normalize_price(raw: str) -> str:
     if prefix is None:
         raise ValueError("Moeda ausente.")
     symbol = prefix.group(1).upper()
-    currency = {"R$": "BRL", "BRL": "BRL", "US$": "USD", "$": "USD", "USD": "USD", "€": "EUR", "EUR": "EUR"}[symbol]
-    amount = value[len(prefix.group(1)):]
+    currency = {"R$": "BRL", "BRL": "BRL", "US$": "USD", "$": "USD", "USD": "USD", "€": "EUR", "EUR": "EUR"}[
+        symbol
+    ]
+    amount = value[len(prefix.group(1)) :]
     if "," in amount and "." in amount:
         decimal_separator = "," if amount.rfind(",") > amount.rfind(".") else "."
     elif "," in amount:
@@ -153,7 +155,12 @@ STATUS_LABELS = {
 
 
 def report_to_markdown(report: ComparisonReport) -> str:
-    lines = ["# Comparação de documentos", "", "Resultados extraídos de evidências textuais. Não equivalem a uma auditoria definitiva.", ""]
+    lines = [
+        "# Comparação de documentos",
+        "",
+        "Resultados extraídos de evidências textuais. Não equivalem a uma auditoria definitiva.",
+        "",
+    ]
     for field in report.fields:
         lines += [f"## {field.label} — {STATUS_LABELS[field.status]}", ""]
         for name in report.documents:
