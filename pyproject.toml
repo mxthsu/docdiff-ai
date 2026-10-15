@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "docdiff-ai"
+version = "0.1.0"
+description = "Evidence-first comparison of business documents"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+authors = [{ name = "DocDiff AI contributors" }]
+keywords = ["document-comparison", "document-review", "ai", "docling"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Programming Language :: Python :: 3",
+]
+dependencies = []
+
+[project.optional-dependencies]
+documents = ["docling>=2.0,<4.0"]
+ui = ["streamlit>=1.40,<3.0"]
+dev = ["pytest>=8,<10", "ruff>=0.8,<1.0"]
+
+[project.scripts]
+docdiff = "docdiff_ai.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py311"
