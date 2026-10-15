@@ -1,0 +1,2 @@
+# Minimal sample-only Streamlit deployment (no Docling, OCR or LLM dependencies).
+-e .[ui]
