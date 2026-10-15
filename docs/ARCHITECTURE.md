@@ -24,7 +24,9 @@ CLI / Streamlit ------> Markdown / JSON
 
 - Ingestion validates extensions and a 10 MB limit per document.
 - Markdown and TXT are read as UTF-8; Docling's native PDF parser handles text-based PDFs without local ML models; its Office converters handle DOCX/PPTX.
-- Rule-based field extraction includes literal text evidence.
+- Rule-based field extraction includes literal text evidence; optional LLM extraction proposes candidates that must pass a separate source verification boundary.
+- The LLM completion client is injectable for offline tests and cannot issue tool calls.
+- Only explicit user opt-in permits the document text to be transmitted to an external model.
 - Statuses distinguish match, different, missing and internally ambiguous.
 - LLM summaries do not alter the comparison outcome.
 - The evidence model stores `reference_type`: `text_line` for original TXT/MD or `converted_markdown_line` for PDF/Office. Converted text lines do not establish a physical PDF page number.

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Callable
 from dataclasses import asdict, dataclass
 from decimal import Decimal, InvalidOperation
 from typing import Any
@@ -131,14 +132,19 @@ def extract_evidence(document: SourceDocument, fields: tuple[str, ...] = FIELDS)
     return matches
 
 
-def compare(documents: list[SourceDocument], fields: tuple[str, ...] = FIELDS) -> ComparisonReport:
-    """Compare two or more documents without making unsupported inferences."""
+def compare(
+    documents: list[SourceDocument],
+    fields: tuple[str, ...] = FIELDS,
+    *,
+    extractor: Callable[[SourceDocument, tuple[str, ...]], dict[str, list[Evidence]]] = extract_evidence,
+) -> ComparisonReport:
+    """Compare source-grounded evidence using the deterministic or an injected extractor."""
     if not 2 <= len(documents) <= 10:
         raise ValueError("Forneça entre 2 e 10 documentos.")
     names = [document.name for document in documents]
     if len(set(names)) != len(names):
         raise ValueError("Os nomes dos documentos precisam ser diferentes.")
-    evidence = {document.name: extract_evidence(document, fields) for document in documents}
+    evidence = {document.name: extractor(document, fields) for document in documents}
     comparisons: list[FieldComparison] = []
     for field in fields:
         occurrences = {name: evidence[name][field] for name in names}

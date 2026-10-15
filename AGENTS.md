@@ -32,7 +32,9 @@ For reviews and re-reviews load code-review first.
 - Treat contradictory and missing information explicitly, never guess.
 - Converted Markdown line numbers are not PDF page numbers; always preserve `reference_type`.
 - Validate file size, extension and user-controlled input.
-- Never invoke external models from offline paths.
+- Never invoke external models from offline paths. LLM extraction must be explicitly selected.
+- Treat model-produced evidence as untrusted until verified against exact source text; report rejected candidates.
+- Never claim LLM benchmark accuracy based on mocked model completions.
 - Never commit secrets or personal customer documents.
 - Add focused tests for meaningful changes and fixes.
 - Update examples and README when user-visible behavior changes.
