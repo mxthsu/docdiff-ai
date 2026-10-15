@@ -20,6 +20,7 @@ contract analysis or legal decision system.
 - Detect differences, missing fields and contradictions inside a document.
 - Export evidence-linked reports as Markdown or JSON.
 - Convert PDF with selectable text and DOCX/PPTX through lightweight, optional Docling adapters.
+- Optionally extract candidate values with an LLM and verify literal source evidence before comparing.
 - Optionally generate an LLM summary using an OpenAI-compatible API.
 - Optionally use a Streamlit interface with document upload.
 
@@ -46,7 +47,7 @@ python -m pip install -e ".[ui]"
 streamlit run app/streamlit_app.py
 ~~~
 
-### Optional LLM summary
+### Optional LLM extraction and summary
 
 Core comparison runs offline. To request a narrative summary, explicitly configure
 an OpenAI-compatible provider:
@@ -55,12 +56,16 @@ an OpenAI-compatible provider:
 $env:DOCDIFF_API_KEY="your-key"
 $env:DOCDIFF_MODEL="your-model"
 $env:DOCDIFF_BASE_URL="https://api.openai.com/v1"
+docdiff examples/proposal_a.md examples/proposal_b.md --extraction llm --format json
+# Or keep offline extraction and summarize its findings:
 docdiff examples/proposal_a.md examples/proposal_b.md --ai-summary
 ~~~
 
-**Privacy:** this option sends the structured findings and evidence excerpts to
-the configured provider, not the full original files. Use only with permitted
-data. AI summaries are unverified and require human review.
+**Privacy:** `--extraction llm` sends the **complete extracted document text**
+to the configured provider, capped at 40,000 characters per document; this is
+strictly opt-in. The separate `--ai-summary` sends only the structured findings
+and excerpts. Offline rules send nothing. All AI outputs require human review.
+See [LLM extraction, source verification and evaluation](docs/LLM_EXTRACTION.md).
 
 ## Expected sample result
 
@@ -76,18 +81,21 @@ Each field contains the exact values and source excerpts.
 ## Architecture
 
 1. Read files locally (or convert through optional Docling).
-2. Extract values from supported labeled lines.
+2. Extract values from supported labeled lines by default, or use an opt-in LLM whose candidate values must pass literal evidence checks.
 3. Normalize values and compare across documents.
 4. Present differences with inspectable excerpts and converted-text line numbers.
 5. Optionally summarize those evidence-backed results with an LLM.
 
 See [document formats and integration tests](docs/DOCUMENTS.md),
-[architecture](docs/ARCHITECTURE.md), [roadmap](.plans/active/v0.1.md),
+[architecture](docs/ARCHITECTURE.md), [LLM extraction and evaluation](docs/LLM_EXTRACTION.md),
+[roadmap](.plans/active/v0.1.md),
 and [contributing](CONTRIBUTING.md).
 
 ## Current limitations
 
 - The deterministic engine supports four labeled fields only.
+- The opt-in LLM extraction may recover some prose/table fields but is constrained to the four supported types; it has not been externally benchmarked.
+- A verified quote establishes literal presence, **not** that its semantic meaning is correct or contractually binding.
 - Arbitrary clauses and complex tables are not generally understood yet.
 - PDF files use Docling's native, model-free text extraction: scanned/image-only PDFs require OCR, which is not included yet.
 - For converted PDF/Office files, line references point to converted Markdown text, **not physical PDF pages**.
@@ -103,6 +111,7 @@ python -m ruff check .
 python -m ruff format --check .
 python -m unittest discover -s tests -v
 python .github/scripts/check_skills.py
+python scripts/evaluate_extraction.py --mode rules
 ~~~
 
 Instructions for coding agents live in [AGENTS.md](AGENTS.md). Canonical skills and

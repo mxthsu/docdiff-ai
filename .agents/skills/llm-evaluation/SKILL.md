@@ -14,6 +14,8 @@ Use when adding or changing prompts, providers, LLM-based extraction or summarie
 5. Compare versions against a fixed baseline before claiming improvement.
 6. Treat model output as unverified and require source-backed claims.
 7. Keep external data transfer explicit and documented.
+8. For extraction, require exact source quotes, field-context validation, rejection accounting and adversarial fixtures; remember that string matching is not semantic correctness.
+9. Never treat mocked provider output as proof of real model accuracy.
 
 Never state accuracy, reliability or production-readiness metrics that have
 not been measured with reproducible evidence.
