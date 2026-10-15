@@ -1,67 +1,58 @@
-# DocDiff AI
+# Revisa Documentos
 
-**Compare two versions of a document. See what changed. Verify the evidence.**
+**Compare versões de documentos. Identifique alterações. Confira as evidências.**
 
-DocDiff AI is an open-source document review workspace for business users and
-developers. Upload two document versions, review added, removed, modified and
-unchanged passages, and inspect the original text for each finding.
+O **Revisa Documentos** é uma ferramenta de código aberto para comparar versões de contratos, propostas e outros documentos comerciais. Ela destaca trechos **alterados, adicionados, removidos e preservados**, mostra os textos anterior e revisado lado a lado e permite consultar de onde veio cada informação.
 
-**No account or LLM API key is needed to try the example locally.**
+Você pode experimentar o projeto **localmente, sem cadastro, sem chave de API e sem pagar por um modelo de IA**.
 
-> Em português: compare versões de um contrato ou proposta e veja as mudanças
-> lado a lado. Os trechos são apresentados com referências ao texto de origem.
+> **Situação:** versão alfa (0.1). A revisão textual já funciona; não é uma auditoria jurídica automática nem um serviço público hospedado.
 
-**Project status: early alpha (v0.1).** This is a working local preview, not a
-hosted service or automated legal review system.
+## Experimente agora
 
-## Try the review workspace
-
-Requirements: Python 3.11+ and a clone of this repository.
+Requer **Python 3.11 ou superior**. Na pasta do projeto, execute:
 
 ~~~bash
 python -m pip install -e ".[ui]"
 streamlit run app/streamlit_app.py
 ~~~
 
-The interface opens with a complete comparison of **two synthetic agreements**.
-You can run the example again with one click, upload your own two versions, filter
-changes and export a Markdown/JSON review report. The local demo makes no LLM
-requests and does not require paid credentials.
+O aplicativo já abre com dois contratos fictícios comparados. Você pode inspecionar as alterações, carregar duas versões próprias, filtrar os resultados e baixar o relatório em Markdown ou JSON.
 
-A restricted **public sample-only entry point** is included:
+Para executar apenas a demonstração restrita, sem upload de arquivos e sem ações de IA:
 
 ~~~bash
 streamlit run app/demo_app.py
 ~~~
 
-It disables uploads and LLM actions. See
-[public deployment instructions](docs/DEPLOYMENT.md). No hosted URL has been
-published or verified yet.
+**A demonstração pública ainda não está hospedada.** As instruções estão em [Publicação da demonstração](docs/DEPLOYMENT.md).
 
-For PDF/DOCX/PPTX input, install the optional lightweight conversion integration:
+### PDF, DOCX e PPTX
+
+A integração opcional com o [Docling](https://github.com/docling-project/docling) permite extrair o texto desses formatos:
 
 ~~~bash
 python -m pip install -e ".[documents,ui]"
 ~~~
 
-PDF uses model-free text extraction; scanned/image-only PDFs need OCR, which
-is **not** supported by this path.
+PDFs digitalizados, compostos apenas por imagem, exigem OCR e **não são suportados** pelo conversor nativo utilizado atualmente.
 
-## Example: before and after
+## Exemplo de comparação
 
-| Finding | Version A | Version B |
+Dois contratos fictícios apresentam:
+
+| Informação | Versão anterior | Versão revisada |
 |---|---|---|
-| Payment window | 30 days | 45 days |
-| Termination notice | 60 days | 90 days |
-| Confidentiality section | Present | Removed |
-| Personal-data access | Absent | Added |
+| Prazo de pagamento | 30 dias | 45 dias |
+| Aviso prévio de rescisão | 60 dias | 90 dias |
+| Confidencialidade | Cláusula presente | Cláusula removida |
+| Proteção de dados | Cláusula ausente | Cláusula adicionada |
 
-Each change links to the exact passage and extracted-text line references,
-not just a generated interpretation. These are **synthetic example values**.
+Cada alteração aponta para os trechos originais e suas linhas no texto processado. **O sistema não afirma que uma mudança é irregular ou juridicamente arriscada.**
 
-## CLI and library
+## Interface de linha de comando
 
-Version review is deterministic and works without network calls:
+A comparação textual funciona sem conexão com serviços de IA:
 
 ~~~bash
 python -m pip install -e .
@@ -69,66 +60,60 @@ docdiff examples/agreement_before.md examples/agreement_after.md --review-versio
 docdiff examples/agreement_before.md examples/agreement_after.md --review-versions --format json
 ~~~
 
-The original multi-document **field comparison** remains available:
+O comparador de **campos comerciais** também está disponível:
 
 ~~~bash
 docdiff examples/proposal_a.md examples/proposal_b.md
 ~~~
 
-It extracts and compares four labeled fields: total amount, delivery deadline,
-warranty period and payment period. For advanced use, there is a separate
-**opt-in LLM field extractor**, with literal-source verification and an evaluation
-dataset. See [LLM extraction and privacy](docs/LLM_EXTRACTION.md).
+Ele compara quatro informações: valor total, prazo de entrega, garantia e prazo de pagamento.
 
-### Why not just use Docling?
+Também existe uma extração **opcional por modelo de linguagem** com validação de trechos originais. Ela precisa ser ativada explicitamente e envia o texto extraído ao provedor configurado. Consulte [Extração por IA](docs/LLM_EXTRACTION.md).
 
-[Docling](https://github.com/docling-project/docling) parses and converts source
-documents into structured content. DocDiff AI uses Docling as an **optional
-input adapter**, then handles *version comparison, evidence preservation,
-review workflow and report exports*. It is an independent application, not
-a fork of Docling or a replacement for its conversion pipeline.
+## Qual é a diferença para o Docling?
 
-## Architecture in brief
+O **Docling** converte documentos e identifica sua estrutura. O **Revisa Documentos** utiliza essa conversão para oferecer um fluxo de **comparação entre versões, revisão de trechos e geração de relatórios com evidências**. Este repositório é um aplicativo independente, não um substituto nem uma cópia do Docling.
 
 ~~~text
-TXT / MD / PDF / DOCX / PPTX
-            |
-   Local text / Docling conversion
-            |
-            +-- version_diff.py: paragraph segmentation and lexical alignment
-            |       |
-            |       +-- before/after review + evidence + exports
-            |
-            +-- core.py: normalized field comparison
-                    |
-                    +-- rules (offline) or verified_extraction.py (opt-in LLM)
+Documentos TXT / MD / PDF / DOCX / PPTX
+                  |
+        Leitura local ou Docling
+                  |
+        +---------+----------+
+        |                    |
+  Revisão de versões   Comparação de campos
+  • trechos            • valores normalizados
+  • alterações         • evidências
+  • antes/depois       • regras locais por padrão
+        |                    |
+  Interface e relatórios em Markdown / JSON
 ~~~
 
-Core behavior is unit tested without remote providers. Heavy Docling conversion
-is tested separately. The repository includes `AGENTS.md`, task-specific skills,
-skill routing, contribution guidelines and lint/test checks on pull requests.
+A análise de mudanças de significado com um modelo de IA está sendo desenvolvida em [um PR separado](https://github.com/mxthsu/docdiff-ai/pull/10), ainda **não integrado à versão principal**. A comparação de versões presente na `main` utiliza correspondência textual e similaridade lexical, não uma compreensão semântica completa.
 
-See [version review behavior](docs/VERSION_REVIEW.md),
-[architecture](docs/ARCHITECTURE.md),
-[document formats](docs/DOCUMENTS.md) and
-[how to contribute](CONTRIBUTING.md) and
-[existing open-source alternatives](docs/ALTERNATIVES.md).
+## Limitações importantes
 
-## What the tool does **not** do
+- A similaridade textual não garante equivalência de significado. Paráfrases e mudanças complexas podem ser classificadas incorretamente.
+- A detecção de números diferentes **não equivale a uma avaliação de risco**.
+- Trechos de PDF/Office convertidos apontam para linhas do Markdown gerado, **não para coordenadas físicas na página original**.
+- PDFs somente com imagem exigem OCR, ainda não oferecido nessa configuração.
+- Não há hospedagem pública verificada nem proteção suficiente para processar uploads de pessoas desconhecidas em um serviço aberto.
+- Não existem métricas comprovadas de desempenho com modelos de IA em documentos reais.
+- Os relatórios apoiam a revisão humana; não aprovam contratos automaticamente.
 
-- **Text similarity is not semantic equivalence.** The version review uses
-  text, headings and conservative lexical matching; it can miss paraphrases,
-  reorders of substantially changed clauses and cross-references.
-- Numeric differences are flagged for review, **not classified as legal risk**.
-- Exact quotes are evidence of textual occurrence, not proof of contractual meaning.
-- Converted Markdown line numbers are **not physical PDF page citations**.
-- Hosted deployment, OCR, security hardening for untrusted multi-tenant uploads,
-  AI-powered clause-risk classification and semantic contradiction analysis are
-  not implemented yet.
-- LLM extraction is opt-in and sends document text to the configured provider.
-  Model accuracy has **not** been established on real-world documents.
+## Documentação técnica
 
-## Quality and development
+Os arquivos técnicos abaixo continuam em inglês nesta etapa. Somente este README e a interface do site estão sendo padronizados em português.
+
+- [Revisão de versões](docs/VERSION_REVIEW.md)
+- [Formato dos arquivos e Docling](docs/DOCUMENTS.md)
+- [Extração opcional por IA e privacidade](docs/LLM_EXTRACTION.md)
+- [Arquitetura](docs/ARCHITECTURE.md)
+- [Publicação segura da demonstração](docs/DEPLOYMENT.md)
+- [Ferramentas semelhantes](docs/ALTERNATIVES.md)
+- [Como contribuir](CONTRIBUTING.md)
+
+## Desenvolvimento e qualidade
 
 ~~~bash
 python -m pip install -e ".[dev]"
@@ -137,12 +122,20 @@ python -m ruff format --check .
 python -m unittest discover -s tests -v
 python .github/scripts/check_skills.py
 python scripts/evaluate_extraction.py --mode rules
-# Optional Streamlit UI smoke check (requires .[ui]):
+~~~
+
+O teste opcional da interface exige `.[ui]`:
+
+~~~bash
 python scripts/smoke_ui.py
 ~~~
 
-Optional real PDF/Office integration tests are documented in
-[docs/DOCUMENTS.md](docs/DOCUMENTS.md).
+Os testes reais de conversão estão documentados em [Formatos e testes](docs/DOCUMENTS.md).
 
-**License:** MIT. Reports with reproducible examples and focused contributions
-are welcome. No confidential documents are checked into this repository.
+### Idioma do projeto
+
+Nesta etapa, **o README e os textos visíveis do site utilizam português do Brasil (pt-BR)**. O código, as skills, os testes, a documentação técnica e os identificadores internos podem continuar em inglês. Os comandos e o endereço `mxthsu/docdiff-ai` foram preservados para manter a compatibilidade.
+
+A versão em inglês do README e do site será organizada posteriormente, com uma estratégia de internacionalização própria.
+
+**Licença:** MIT. Contribuições e relatos de problemas reproduzíveis são bem-vindos. Não envie documentos confidenciais para issues, PRs ou testes.
