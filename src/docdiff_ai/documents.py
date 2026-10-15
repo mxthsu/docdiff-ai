@@ -1,7 +1,8 @@
-"""Document input adapters; heavy extraction dependencies are optional."""
+"""Optional Docling adapter for model-free PDF and Office conversions."""
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
@@ -12,25 +13,62 @@ TEXT_SUFFIXES = {".txt", ".md"}
 DOCLING_SUFFIXES = {".pdf", ".docx", ".pptx"}
 SUPPORTED_SUFFIXES = TEXT_SUFFIXES | DOCLING_SUFFIXES
 
+CONVERTED_MARKDOWN = "converted_markdown_line"
+
 
 class DocumentReadError(ValueError):
-    """Unsupported, unreadable, or oversized input document."""
+    """Unsupported, unreadable, incomplete, or oversized input document."""
 
 
 def _docling_extract(path: Path) -> str:
     try:
-        from docling.document_converter import DocumentConverter
+        from docling.datamodel.base_models import ConversionStatus, InputFormat
+        from docling.datamodel.pipeline_options import NativePdfPipelineOptions
+        from docling.document_converter import (
+            DocumentConverter,
+            NativePdfFormatOption,
+        )
     except ImportError as exc:
         raise DocumentReadError(
-            "Instale a integração para PDF/Office com: pip install 'docdiff-ai[documents]'"
+            "Instale a integração para PDF/Office: pip install 'docdiff-ai[documents]'"
         ) from exc
+
+    # The native PDF pipeline requires no downloaded ML models. Scanned-only
+    # PDFs are intentionally unsupported until a separate evaluated OCR path exists.
     try:
-        result = DocumentConverter().convert(str(path))
+        options = {}
+        if path.suffix.lower() == ".pdf":
+            options[InputFormat.PDF] = NativePdfFormatOption(
+                pipeline_options=NativePdfPipelineOptions(
+                    generate_page_images=False,
+                    generate_picture_images=False,
+                )
+            )
+            allowed = [InputFormat.PDF]
+        elif path.suffix.lower() == ".docx":
+            allowed = [InputFormat.DOCX]
+        else:
+            allowed = [InputFormat.PPTX]
+        converter = DocumentConverter(allowed_formats=allowed, format_options=options)
+        result = converter.convert(str(path), raises_on_error=False)
+        if result.status != ConversionStatus.SUCCESS:
+            raise DocumentReadError(
+                f"Conversão não concluída ({result.status}): {path.name}. "
+                "Confira se o documento está corrompido ou protegido."
+            )
         text = result.document.export_to_markdown()
+    except DocumentReadError:
+        raise
     except Exception as exc:
-        raise DocumentReadError(f"Falha na conversão de {path.name}: {exc}") from exc
-    if not text.strip():
-        raise DocumentReadError(f"Não foi possível extrair conteúdo de {path.name}.")
+        # Conversion is an optional external dependency boundary.
+        raise DocumentReadError(f"Falha ao converter {path.name}: {type(exc).__name__}") from exc
+    # Native PDF output can contain only image placeholders, even without text.
+    readable_text = re.sub(r"<!--.*?-->", "", text, flags=re.DOTALL)
+    if not re.search(r"\w", readable_text):
+        raise DocumentReadError(
+            f"Documento sem texto extraível: {path.name}. "
+            "PDFs digitalizados precisam de OCR, ainda não disponível nesta configuração."
+        )
     return text
 
 
@@ -46,15 +84,14 @@ def from_path(path: Path) -> SourceDocument:
     try:
         if suffix in TEXT_SUFFIXES:
             text = path.read_text(encoding="utf-8")
-        else:
-            text = _docling_extract(path)
+            return SourceDocument(path.name, text)
+        return SourceDocument(path.name, _docling_extract(path), CONVERTED_MARKDOWN)
     except (OSError, UnicodeError) as exc:
         raise DocumentReadError(f"Falha ao ler {path.name}: {exc}") from exc
-    return SourceDocument(path.name, text)
 
 
 def from_bytes(filename: str, data: bytes) -> SourceDocument:
-    """Read a user-uploaded file without trusting its original filesystem path."""
+    """Read uploaded files without trusting paths included in the filename."""
     safe_name = Path(filename.replace("\\", "/")).name
     suffix = Path(safe_name).suffix.lower()
     if suffix not in SUPPORTED_SUFFIXES:
@@ -69,4 +106,4 @@ def from_bytes(filename: str, data: bytes) -> SourceDocument:
     with TemporaryDirectory(prefix="docdiff-") as folder:
         path = Path(folder) / f"input{suffix}"
         path.write_bytes(data)
-        return SourceDocument(safe_name, _docling_extract(path))
+        return SourceDocument(safe_name, _docling_extract(path), CONVERTED_MARKDOWN)

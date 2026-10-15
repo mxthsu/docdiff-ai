@@ -30,6 +30,7 @@ For reviews and re-reviews load code-review first.
 - Keep work scoped; do not change unrelated modules or the public schema silently.
 - Every extracted value must retain literal source evidence.
 - Treat contradictory and missing information explicitly, never guess.
+- Converted Markdown line numbers are not PDF page numbers; always preserve `reference_type`.
 - Validate file size, extension and user-controlled input.
 - Never invoke external models from offline paths.
 - Never commit secrets or personal customer documents.
