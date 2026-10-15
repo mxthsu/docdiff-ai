@@ -23,11 +23,11 @@ CLI / Streamlit ------> Markdown / JSON
 ## Design constraints
 
 - Ingestion validates extensions and a 10 MB limit per document.
-- Markdown and TXT are read as UTF-8; optional Docling handles PDF and Office.
+- Markdown and TXT are read as UTF-8; Docling's native PDF parser handles text-based PDFs without local ML models; its Office converters handle DOCX/PPTX.
 - Rule-based field extraction includes literal text evidence.
 - Statuses distinguish match, different, missing and internally ambiguous.
 - LLM summaries do not alter the comparison outcome.
-- A converted Markdown line does not establish a physical PDF page number.
+- The evidence model stores `reference_type`: `text_line` for original TXT/MD or `converted_markdown_line` for PDF/Office. Converted text lines do not establish a physical PDF page number.
 - Files uploaded via the UI are only stored in temporary locations during conversion.
 
 ## Relationship to Docling

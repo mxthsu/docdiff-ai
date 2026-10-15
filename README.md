@@ -19,7 +19,7 @@ contract analysis or legal decision system.
 - Extract labeled totals, delivery deadlines, warranties and payment terms.
 - Detect differences, missing fields and contradictions inside a document.
 - Export evidence-linked reports as Markdown or JSON.
-- Convert PDF/DOCX/PPTX using the optional Docling integration.
+- Convert PDF with selectable text and DOCX/PPTX through lightweight, optional Docling adapters.
 - Optionally generate an LLM summary using an OpenAI-compatible API.
 - Optionally use a Streamlit interface with document upload.
 
@@ -81,14 +81,16 @@ Each field contains the exact values and source excerpts.
 4. Present differences with inspectable excerpts and converted-text line numbers.
 5. Optionally summarize those evidence-backed results with an LLM.
 
-See [architecture](docs/ARCHITECTURE.md), [roadmap](.plans/active/v0.1.md),
+See [document formats and integration tests](docs/DOCUMENTS.md),
+[architecture](docs/ARCHITECTURE.md), [roadmap](.plans/active/v0.1.md),
 and [contributing](CONTRIBUTING.md).
 
 ## Current limitations
 
 - The deterministic engine supports four labeled fields only.
 - Arbitrary clauses and complex tables are not generally understood yet.
-- For converted PDF/Office files, line references point to Markdown text, not guaranteed PDF pages.
+- PDF files use Docling's native, model-free text extraction: scanned/image-only PDFs require OCR, which is not included yet.
+- For converted PDF/Office files, line references point to converted Markdown text, **not physical PDF pages**.
 - This is not a hosted production service or a replacement for human document review.
 - AI summaries are not automatically fact-checked.
 - OCR and conversion quality depend on the optional Docling setup.
