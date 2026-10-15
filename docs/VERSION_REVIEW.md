@@ -39,7 +39,10 @@ and removal. Numeric flags mean only that numeric tokens changed, not that
 legal or financial risk was detected.
 
 The report keeps both verbatim texts so the reader can verify each observation.
-An optional evaluated AI interpretation can be introduced later, but must
+An optional, experimental, quote-verified per-pair interpretation is provided
+for modified passages only; it requires consent and does not change the offline
+report. See [SEMANTIC_REVIEW.md](SEMANTIC_REVIEW.md).
+A future evaluated semantic **alignment** for unmatched clauses must
 explain uncertainty and cite each side independently. It must never silently
 override textual evidence.
 

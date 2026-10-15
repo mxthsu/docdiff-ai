@@ -37,6 +37,9 @@ def main() -> None:
         raise AssertionError("demo button not available")
     app.button[demo_buttons[0]].click().run()
     assert_healthy(app, "demo interaction")
+    semantic_actions = [button for button in app.button if button.label == "Solicitar hipótese por IA"]
+    if len(semantic_actions) != 2 or any(not button.disabled for button in semantic_actions):
+        raise AssertionError("local semantic actions must require explicit consent")
 
     app.radio[0].set_value("Comparar campos entre documentos").run()
     assert_healthy(app, "field comparison navigation")
@@ -50,6 +53,8 @@ def main() -> None:
         assert_healthy(demo, "public sample-only review")
         if any("meus documentos" in btn.label for btn in demo.button):
             raise AssertionError("upload action exposed in demo-only mode")
+        if any("Solicitar hipótese por IA" == button.label for button in demo.button):
+            raise AssertionError("public demo must not expose semantic model actions")
         demo.radio[0].set_value("Comparar campos entre documentos").run()
         assert_healthy(demo, "public sample-only fields")
         field_button = next(

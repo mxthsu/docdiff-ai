@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -11,6 +12,7 @@ import streamlit as st
 from docdiff_ai.ai import AIReviewError, summarize_with_llm
 from docdiff_ai.core import STATUS_LABELS, SourceDocument, compare, report_to_markdown
 from docdiff_ai.documents import DocumentReadError, from_bytes
+from docdiff_ai.semantic_review import SemanticReviewError, interpret_change
 from docdiff_ai.verified_extraction import ExtractionError, VerifiedLLMExtractor
 from docdiff_ai.version_diff import ReviewReport, compare_versions, review_to_markdown
 
@@ -130,6 +132,58 @@ def render_review(report: ReviewReport) -> None:
                 st.warning("O trecho contém números diferentes. Confira valores, unidades e contexto.")
             if change.status == "modified":
                 st.caption(f"Alinhamento: {change.matched_by}. Sem garantia de equivalência semântica.")
+                if not DEMO_ONLY and change.before is not None and change.after is not None:
+                    digest = hashlib.sha256(
+                        (
+                            change.before.document
+                            + change.after.document
+                            + change.before.text
+                            + change.after.text
+                        ).encode("utf-8")
+                    ).hexdigest()[:16]
+                    st.markdown("**Interpretar esta mudança com IA (opcional)**")
+                    st.caption(
+                        "Somente os dois trechos exibidos serão enviados ao provedor externo. "
+                        "A IA propõe uma hipótese; o sistema exige citações exatas de ambas "
+                        "as versões, mas não pode confirmar o significado jurídico."
+                    )
+                    consent = st.checkbox(
+                        "Autorizo enviar estes dois trechos ao provedor configurado.",
+                        key=f"semantic_consent_{digest}",
+                    )
+                    if st.button(
+                        "Solicitar hipótese por IA",
+                        key=f"semantic_button_{digest}",
+                        disabled=not consent,
+                    ):
+                        try:
+                            st.session_state[f"semantic_result_{digest}"] = interpret_change(change)
+                        except SemanticReviewError as exc:
+                            st.error(str(exc))
+                    checked = st.session_state.get(f"semantic_result_{digest}")
+                    if checked is not None:
+                        if checked.status == "abstained":
+                            st.info(
+                                "O modelo se absteve; o texto original permanece disponível para revisão."
+                            )
+                        elif checked.assessment is not None:
+                            item = checked.assessment
+                            st.warning("Hipótese não verificada semanticamente — revisão humana obrigatória")
+                            st.write(
+                                f"Categoria sugerida: {item.category} · "
+                                f"Interpretação sugerida: {item.interpretation}"
+                            )
+                            st.write(item.explanation_unverified)
+                            st.caption(f"Antes · {item.before.document} · linha {item.before.line}")
+                            st.code(item.before.excerpt, language=None)
+                            st.caption(f"Depois · {item.after.document} · linha {item.after.line}")
+                            st.code(item.after.excerpt, language=None)
+                            st.caption(
+                                f"Modelo: {checked.model or 'não informado'} · "
+                                f"Tokens entrada/saída: {checked.input_tokens}/"
+                                f"{checked.output_tokens} · custo USD: "
+                                f"{checked.cost_usd if checked.cost_usd is not None else 'não informado'}"
+                            )
 
     st.divider()
     st.subheader("Exportar relatório")
