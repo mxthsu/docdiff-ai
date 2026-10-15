@@ -39,6 +39,7 @@ it cannot override the normalized field-comparison statuses.
 
 - Version evidence includes `document`, `heading`, `text`,
   `start_line`, `end_line` and `reference_type`.
+- Optional `semantic_review.py` takes only a selected paired change, requires two independently verified original quotes, and never overwrites the offline review.
 - The version-review pairing order is exact-text matches, unique headings,
   then conservative **lexical** matches. This is **not semantic analysis**.
 - Field extraction preserves `document`, `line`, literal `excerpt`, `raw`,

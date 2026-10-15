@@ -20,6 +20,7 @@ For reviews and re-reviews load code-review first.
 - src/docdiff_ai/documents.py — reading and Docling input adapter
 - src/docdiff_ai/core.py — deterministic extraction, normalization, field comparison
 - src/docdiff_ai/version_diff.py — offline version review, anchored passages, textual alignment
+- src/docdiff_ai/semantic_review.py — opt-in bilateral LLM hypotheses with exact source quotes
 - src/docdiff_ai/ai.py — optional and explicitly unverified LLM summary
 - src/docdiff_ai/cli.py — CLI
 - app/streamlit_app.py — local interactive workspace
@@ -39,6 +40,8 @@ For reviews and re-reviews load code-review first.
 - Never invoke external models from offline paths. LLM extraction must be explicitly selected.
 - Treat model-produced evidence as untrusted until verified against exact source text; report rejected candidates.
 - Never claim LLM benchmark accuracy based on mocked model completions.
+- Never present bilateral quote presence as proof of semantic correctness.
+- Semantic interpretation must be opt-in and blocked in the public sample-only app.
 - Never commit secrets or personal customer documents.
 - Add focused tests for meaningful changes and fixes.
 - Update examples and README when user-visible behavior changes.

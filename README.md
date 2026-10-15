@@ -38,6 +38,12 @@ It disables uploads and LLM actions. See
 [public deployment instructions](docs/DEPLOYMENT.md). No hosted URL has been
 published or verified yet.
 
+In the local workspace, an **experimental, optional semantic review** can
+suggest what a selected change means. It requires your explicit consent before
+sending two excerpts to a configured model. The result must cite both original
+passages and remains an unverified hypothesis. See
+[semantic review and evaluation](docs/SEMANTIC_REVIEW.md).
+
 For PDF/DOCX/PPTX input, install the optional lightweight conversion integration:
 
 ~~~bash
@@ -98,6 +104,7 @@ TXT / MD / PDF / DOCX / PPTX
             +-- version_diff.py: paragraph segmentation and lexical alignment
             |       |
             |       +-- before/after review + evidence + exports
+            |       +-- semantic_review.py (optional per-pair LLM hypothesis)
             |
             +-- core.py: normalized field comparison
                     |
@@ -112,7 +119,8 @@ See [version review behavior](docs/VERSION_REVIEW.md),
 [architecture](docs/ARCHITECTURE.md),
 [document formats](docs/DOCUMENTS.md) and
 [how to contribute](CONTRIBUTING.md) and
-[existing open-source alternatives](docs/ALTERNATIVES.md).
+[existing open-source alternatives](docs/ALTERNATIVES.md) and
+[semantic review evaluation](docs/SEMANTIC_REVIEW.md).
 
 ## What the tool does **not** do
 
@@ -123,8 +131,9 @@ See [version review behavior](docs/VERSION_REVIEW.md),
 - Exact quotes are evidence of textual occurrence, not proof of contractual meaning.
 - Converted Markdown line numbers are **not physical PDF page citations**.
 - Hosted deployment, OCR, security hardening for untrusted multi-tenant uploads,
-  AI-powered clause-risk classification and semantic contradiction analysis are
-  not implemented yet.
+  automated legal-risk classification and general semantic alignment of
+  unpaired clauses are not implemented yet. The optional per-pair semantic
+  hypothesis is not independently verified for meaning.
 - LLM extraction is opt-in and sends document text to the configured provider.
   Model accuracy has **not** been established on real-world documents.
 
@@ -137,6 +146,7 @@ python -m ruff format --check .
 python -m unittest discover -s tests -v
 python .github/scripts/check_skills.py
 python scripts/evaluate_extraction.py --mode rules
+python scripts/evaluate_semantic.py --mode baseline
 # Optional Streamlit UI smoke check (requires .[ui]):
 python scripts/smoke_ui.py
 ~~~
